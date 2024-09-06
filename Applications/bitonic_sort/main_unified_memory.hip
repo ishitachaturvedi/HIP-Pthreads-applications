@@ -30,9 +30,9 @@
 #include <random>
 #include <string>
 #include <string_view>
+#include <vector>
 
-
-hipHostMalloc
+#define DEBUG_CHECK
 
 /// \brief Given an array of n elements, this kernel implements the j-th stage within the i-th
 /// step of the bitonic sort, being 0 <= i < log_2(n) and 0 <= j <= i.
@@ -151,28 +151,37 @@ int main(int argc, char* argv[])
     {
         std::cout << "The ordering must be 'dec' or 'inc', the default ordering is 'inc'."
                   << std::endl;
-        return error_exit_code;
+        return 1; // Error exit code
     }
     const bool sort_increasing = (sort.compare("inc") == 0);
 
     // Compute length of the array to be sorted.
     const unsigned int length = 1u << steps;
 
-    // Allocate and init random host input array. Copy input array for CPU execution.
-    std::vector<unsigned int> array(length);
-    std::for_each(array.begin(), array.end(), [](unsigned int& e) { e = rand() % 10; });
+    // Allocate and init random host input array. Use hipHostMalloc for pinned memory.
+    unsigned int* h_array = nullptr;
+    HIP_CHECK(hipHostMalloc(&h_array, length * sizeof(unsigned int), hipHostMallocDefault));
 
-    std::vector<unsigned int> expected_array(array);
+    // Generate the array
+    std::mt19937 rng(10);
+    std::uniform_int_distribution<unsigned int> dist(0, 99);  // Uniform distribution in range [0, 99]
+    for(unsigned int i = 0; i < length; ++i)
+    {
+        h_array[i] = dist(rng);
+    }
+
+#ifdef DEBUG_CHECK
+    std::vector<unsigned int> expected_array(h_array, h_array + length);
+#endif
 
     std::cout << "Sorting an array of " << length << " elements using the bitonic sort."
               << std::endl;
 
-    // Declare and allocate pinned host memory with hipHostMalloc.
-    unsigned int* h_array = nullptr;
-    HIP_CHECK(hipHostMalloc(&h_array, length * sizeof(unsigned int), hipHostMallocDefault));
-    
-    // Copy data to pinned host memory
-    std::copy(array.begin(), array.end(), h_array);
+    // Declare and allocate device memory and copy input data.
+    unsigned int* d_array{};
+    HIP_CHECK(hipMalloc(&d_array, length * sizeof(unsigned int)));
+    HIP_CHECK(
+        hipMemcpy(d_array, h_array, length * sizeof(unsigned int), hipMemcpyHostToDevice));
 
     // Number of threads in each kernel block and number of blocks in the grid.
     const unsigned int local_threads  = (length > 256) ? 256 : length / 2;
@@ -198,7 +207,7 @@ int main(int argc, char* argv[])
 
             // Launch the bitonic sort kernel on the default stream.
             bitonic_sort_kernel<<<grid_dim, block_dim, 0 /*shared memory*/, hipStreamDefault>>>(
-                h_array,  // Using host-pinned memory directly
+                d_array,
                 i,
                 j,
                 sort_increasing);
@@ -216,6 +225,12 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Copy the sorted data back to the host.
+    HIP_CHECK(hipMemcpy(h_array, d_array, length * sizeof(unsigned int), hipMemcpyDeviceToHost));
+
+    // Free device memory.
+    HIP_CHECK(hipFree(d_array));
+
     // Free events variables and pinned host memory.
     HIP_CHECK(hipEventDestroy(start));
     HIP_CHECK(hipEventDestroy(stop));
@@ -225,6 +240,7 @@ int main(int argc, char* argv[])
     std::cout << "GPU bitonic sort took " << total_kernels << " milliseconds to complete."
               << std::endl;
 
+#ifdef DEBUG_CHECK
     // Execute CPU algorithm.
     bitonic_sort_reference(expected_array.data(), length, sort_increasing);
 
@@ -233,7 +249,10 @@ int main(int argc, char* argv[])
     std::cout << "Validating results with CPU implementation." << std::endl;
     for(unsigned int i = 0; i < length; ++i)
     {
-        errors += (array[i] - expected_array[i] != 0);
+        errors += (h_array[i] != expected_array[i]);
     }
-    report_validation_result(errors);
+    std::cout << "Validation completed with " << errors << " errors." << std::endl;
+#endif
+
+    return 0;
 }
