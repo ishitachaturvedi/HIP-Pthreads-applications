@@ -132,28 +132,26 @@ void bitonic_sort_reference(unsigned int*      array,
 
 int main(int argc, char* argv[])
 {
-    // Parse user input.
-    cli::Parser parser(argc, argv);
-    parser.set_optional<unsigned int>("l",
-                                      "log2length",
-                                      2,
-                                      "2**l will be the length of the array to be sorted.");
-    parser.set_optional<std::string>("s",
-                                     "sort",
-                                     "inc",
-                                     "Sort in decreasing (dec) or increasing (inc) order.");
-    parser.run_and_exit_if_error();
-
-    const unsigned int steps = parser.get<unsigned int>("l");
-
-    const std::string sort = parser.get<std::string>("s");
-    if(sort.compare("dec") && sort.compare("inc"))
+    if(argc < 3)
     {
-        std::cout << "The ordering must be 'dec' or 'inc', the default ordering is 'inc'."
-                  << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <log2length> <sort_order (inc/dec)>" << std::endl;
         return 1; // Error exit code
     }
-    const bool sort_increasing = (sort.compare("inc") == 0);
+
+    // Parse the first argument as the number of steps (log2length)
+    unsigned int steps = std::stoi(argv[1]);
+
+    // Parse the second argument as the sort order (inc/dec)
+    std::string sort = argv[2];
+
+    // Validate the sort order
+    if(sort != "inc" && sort != "dec")
+    {
+        std::cerr << "The ordering must be 'dec' or 'inc', the default ordering is 'inc'." << std::endl;
+        return 1; // Error exit code
+    }
+
+    const bool sort_increasing = (sort == "inc");
 
     printf("ENTRING HERE!@@\n");
 
