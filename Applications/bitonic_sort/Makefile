@@ -22,6 +22,7 @@
 
 EXAMPLE_HIP := bitonic_sort_HIP
 EXAMPLE_pthreads := bitonic_sort_pthreads
+EXAMPLE_pthreads_arm := bitonic_sort_pthreads_arm
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -53,12 +54,15 @@ ILDFLAGS  += $(LDFLAGS)
 ILDLIBS   += $(LDLIBS)
 
 $(EXAMPLE_HIP): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
-	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o $@ $< $(ILDLIBS)
+	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
 
 $(EXAMPLE_pthreads): 
-	g++ bitonic_sort_pthreads_work_stealing.cpp -lpthread -static -o bitonic_sort_pthreads
+	g++ bitonic_sort_pthreads_work_stealing.c -lpthread -static -o bin/bitonic_sort_pthreads
+
+$(EXAMPLE_pthreads_arm):
+	aarch64-linux-gnu-gcc bitonic_sort_pthreads_work_stealing.c -o bin/bitonic_sort_pthreads_arm -lpthread -static
 
 clean:
-	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads)
+	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads) $(EXAMPLE_pthreads_arm)
 
 .PHONY: clean

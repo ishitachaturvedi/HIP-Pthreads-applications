@@ -32,7 +32,7 @@
 #include <string_view>
 #include <vector>
 
-#define DEBUG_CHECK
+//#define DEBUG_CHECK
 
 /// \brief Given an array of n elements, this kernel implements the j-th stage within the i-th
 /// step of the bitonic sort, being 0 <= i < log_2(n) and 0 <= j <= i.
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
     cli::Parser parser(argc, argv);
     parser.set_optional<unsigned int>("l",
                                       "log2length",
-                                      15,
+                                      2,
                                       "2**l will be the length of the array to be sorted.");
     parser.set_optional<std::string>("s",
                                      "sort",
@@ -154,6 +154,8 @@ int main(int argc, char* argv[])
         return 1; // Error exit code
     }
     const bool sort_increasing = (sort.compare("inc") == 0);
+
+    printf("ENTRING HERE!@@\n");
 
     // Compute length of the array to be sorted.
     const unsigned int length = 1u << steps;
@@ -224,6 +226,8 @@ int main(int argc, char* argv[])
             total_kernels += kernel_ms;
         }
     }
+
+    printf("ENDING HERE!@@\n");
 
     // Copy the sorted data back to the host.
     HIP_CHECK(hipMemcpy(h_array, d_array, length * sizeof(unsigned int), hipMemcpyDeviceToHost));
