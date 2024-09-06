@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-EXAMPLE := applications_bitonic_sort
+EXAMPLE_HIP := bitonic_sort_HIP
+EXAMPLE_pthreads := bitonic_sort_pthreads
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -51,10 +52,13 @@ ICPPFLAGS += $(CPPFLAGS)
 ILDFLAGS  += $(LDFLAGS)
 ILDLIBS   += $(LDLIBS)
 
-$(EXAMPLE): main.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
+$(EXAMPLE_HIP): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
 	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o $@ $< $(ILDLIBS)
 
+$(EXAMPLE_pthreads): 
+	g++ bitonic_sort_pthreads_work_stealing.cpp -lpthread -static -o bitonic_sort_pthreads
+
 clean:
-	$(RM) $(EXAMPLE)
+	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads)
 
 .PHONY: clean
