@@ -57,10 +57,10 @@ $(EXAMPLE_HIP): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp 
 	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
 
 $(EXAMPLE_pthreads): 
-	g++ bitonic_sort_pthreads_work_stealing.c -lpthread -static -o bin/bitonic_sort_pthreads
+	g++ bitonic_sort_pthreads_work_stealing.cpp -lpthread -static -o bin/bitonic_sort_pthreads
 
 $(EXAMPLE_pthreads_arm):
-	aarch64-linux-gnu-gcc bitonic_sort_pthreads_work_stealing.c -o bin/bitonic_sort_pthreads_arm -lpthread -static
+	aarch64-linux-gnu-gcc bitonic_sort_pthreads_work_stealing.cpp -o bin/bitonic_sort_pthreads_arm -lpthread -static
 
 clean:
 	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads) $(EXAMPLE_pthreads_arm)
