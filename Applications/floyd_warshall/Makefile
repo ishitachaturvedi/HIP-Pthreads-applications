@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 EXAMPLE := bin/floyd_warshall_HIP
-EXAMPLE_CPU := bin/floyd_warshall_CPU
+EXAMPLE_CPU := bin/floyd_warshall_pthreads
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
