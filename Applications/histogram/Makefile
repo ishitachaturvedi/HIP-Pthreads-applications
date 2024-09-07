@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-EXAMPLE := bin/histogram_HIP
-EXAMPLE_CPU := bin/histogram_pthreads
+EXAMPLE := histogram_HIP
+EXAMPLE_CPU := histogram_pthreads
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -53,10 +53,10 @@ ILDFLAGS  += $(LDFLAGS)
 ILDLIBS   += $(LDLIBS)
 
 $(EXAMPLE): main.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
-	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o $@ $< $(ILDLIBS)
+	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
 
 $(EXAMPLE_CPU):
-	g++ histogram_pthreads_work_stealing.cpp -o histogram_pthreads_work_stealing -lpthread -static
+	g++ histogram_pthreads_work_stealing.cpp -o bin/histogram_pthreads_work_stealing -lpthread -static
 
 clean:
 	$(RM) $(EXAMPLE) $(EXAMPLE_CPU)
