@@ -100,12 +100,13 @@ int main(int argc, char* argv[])
 {
     constexpr unsigned int block_size = 16;
 
-    cli::Parser parser(argc, argv);
-    configure_parser<block_size>(parser);
-    parser.run_and_exit_if_error();
+    if (argc < 3) {
+        std::cout << "Usage: " << argv[0] << " <nodes> <iterations>" << std::endl;
+        return -1;
+    }
 
-    const unsigned int nodes      = parser.get<unsigned int>("n");
-    const unsigned int iterations = parser.get<unsigned int>("i");
+    const unsigned int nodes = std::stoi(argv[1]);
+    const unsigned int iterations = std::stoi(argv[2]);
 
     if(nodes % block_size)
     {
