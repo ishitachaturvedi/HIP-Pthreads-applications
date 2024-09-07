@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-EXAMPLE := applications_convolution
+EXAMPLE_HIP := convolution_HIP
+EXAMPLE_pthreads := convolution_pthreads
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -51,10 +52,13 @@ ICPPFLAGS += $(CPPFLAGS)
 ILDFLAGS  += $(LDFLAGS)
 ILDLIBS   += $(LDLIBS)
 
-$(EXAMPLE): main.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
-	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o $@ $< $(ILDLIBS)
+$(EXAMPLE_HIP): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
+	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
+
+$(EXAMPLE_pthreads):
+	g++ convolution_pthreads_work_stealing.cpp -o bin/convolution_pthreads_work_stealing -lpthread -static
 
 clean:
-	$(RM) $(EXAMPLE)
+	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads)
 
 .PHONY: clean
