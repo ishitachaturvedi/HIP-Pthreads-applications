@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-EXAMPLE := applications_floyd_warshall
+EXAMPLE := bin/floyd_warshall_HIP
+EXAMPLE_CPU := bin/floyd_warshall_CPU
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -51,10 +52,13 @@ ICPPFLAGS += $(CPPFLAGS)
 ILDFLAGS  += $(LDFLAGS)
 ILDLIBS   += $(LDLIBS)
 
-$(EXAMPLE): main.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
+$(EXAMPLE): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
 	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o $@ $< $(ILDLIBS)
 
+$(EXAMPLE_CPU):
+	g++ floyd_warshall_pthreads_work_stealing.cpp -o floyd_warshall_pthreads_work_stealing -lpthread -static
+
 clean:
-	$(RM) $(EXAMPLE)
+	$(RM) $(EXAMPLE) $(EXAMPLE_CPU)
 
 .PHONY: clean
