@@ -153,8 +153,6 @@ int main(int argc, char* argv[])
 
     const bool sort_increasing = (sort == "inc");
 
-    printf("ENTRING HERE!@@\n");
-
     // Compute length of the array to be sorted.
     const unsigned int length = 1u << steps;
 
@@ -224,8 +222,6 @@ int main(int argc, char* argv[])
             total_kernels += kernel_ms;
         }
     }
-
-    printf("ENDING HERE!@@\n");
 
     // Copy the sorted data back to the host.
     HIP_CHECK(hipMemcpy(h_array, d_array, length * sizeof(unsigned int), hipMemcpyDeviceToHost));
