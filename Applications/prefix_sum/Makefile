@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-EXAMPLE := applications_prefix_sum
+EXAMPLE := prefix_sum_HIP
+EXAMPLE_CPU := prefix_sum_CPU
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -52,9 +53,12 @@ ILDFLAGS  += $(LDFLAGS)
 ILDLIBS   += $(LDLIBS)
 
 $(EXAMPLE): main.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
-	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o $@ $< $(ILDLIBS)
+	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
+
+$(EXAMPLE_CPU):
+	g++ prefix_sum_pthreads_work_stealing.cpp -o bin/$(EXAMPLE_CPU) -lpthread -static
 
 clean:
-	$(RM) $(EXAMPLE)
+	$(RM) $(EXAMPLE) $(EXAMPLE_CPU)
 
 .PHONY: clean
