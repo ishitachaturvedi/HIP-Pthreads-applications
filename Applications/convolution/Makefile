@@ -56,7 +56,7 @@ $(EXAMPLE_HIP): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp 
 	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
 
 $(EXAMPLE_pthreads):
-	g++ convolution_pthreads_work_stealing.cpp -o bin/convolution_pthreads_work_stealing -lpthread -static
+	g++ convolution_pthreads_work_stealing.cpp -o bin/convolution_pthreads -lpthread -static
 
 clean:
 	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads)

@@ -56,7 +56,7 @@ $(EXAMPLE): main.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DI
 	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
 
 $(EXAMPLE_CPU):
-	g++ histogram_pthreads_work_stealing.cpp -o bin/histogram_pthreads_work_stealing -lpthread -static
+	g++ histogram_pthreads_work_stealing.cpp -o bin/histogram_pthreads -lpthread -static
 
 clean:
 	$(RM) $(EXAMPLE) $(EXAMPLE_CPU)

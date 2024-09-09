@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 EXAMPLE := prefix_sum_HIP
-EXAMPLE_CPU := prefix_sum_CPU
+EXAMPLE_CPU := prefix_sum_pthreads
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
