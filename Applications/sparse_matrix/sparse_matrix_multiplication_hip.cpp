@@ -144,8 +144,8 @@ void generate_sparse_matrix(int rows, int cols, double sparsity, unsigned seed,
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 6) {
-        std::cerr << "Usage: " << argv[0] << " <A_rows> <B_cols> <sparsity_A> <sparsity_B> <seed>\n";
+    if (argc != 5) {
+        std::cerr << "Usage: " << argv[0] << " <A_rows> <B_cols> <sparsity_A> <sparsity_B>\n";
         return 1;
     }
 
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     int B_cols = atoi(argv[2]);
     double sparsity_A = atof(argv[3]);
     double sparsity_B = atof(argv[4]);
-    unsigned seed = static_cast<unsigned>(atoi(argv[5]));
+    unsigned seed = 2;
 
     std::vector<int> row_ptr_A, col_ind_A, row_ptr_B, col_ind_B;
     std::vector<double> val_A, val_B;

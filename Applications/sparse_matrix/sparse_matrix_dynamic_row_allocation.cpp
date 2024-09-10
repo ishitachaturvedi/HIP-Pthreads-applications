@@ -86,8 +86,7 @@ void sparse_matmul_pthreads(int* row_ptr_A, int* col_ind_A, double* val_A, int A
 
 void generate_sparse_matrix(int rows, int cols, double sparsity, 
                             int** row_ptr, int** col_ind, double** val) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(2);
     std::uniform_real_distribution<> dis_val(0.0, 10.0);
     std::uniform_real_distribution<> dis_spar(0.0, 1.0);
 
