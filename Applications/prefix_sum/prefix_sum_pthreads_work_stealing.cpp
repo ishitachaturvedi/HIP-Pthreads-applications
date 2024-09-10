@@ -115,10 +115,10 @@ int main(int argc, char* argv[]) {
     std::default_random_engine generator(seed);
     std::uniform_real_distribution<float> distribution(-1.0, 1.0);
 
-    for (int i = 0; i < size; i++) {
-        input[i] = distribution(generator);
-        printf("input[%d] = %f\n", i, input[i]);
-    }
+    //for (int i = 0; i < size; i++) {
+    //    input[i] = distribution(generator);
+    //    printf("input[%d] = %f\n", i, input[i]);
+    //}
 
     // Run the prefix sum algorithm using pthreads with dynamic work allocation
     run_dynamic_prefix_sum(input, output, size, num_threads);
