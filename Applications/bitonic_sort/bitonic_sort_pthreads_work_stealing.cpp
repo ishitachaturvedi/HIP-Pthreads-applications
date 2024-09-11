@@ -22,7 +22,7 @@ struct Task {
 unsigned int shared_index = 0;
 pthread_mutex_t index_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t output_mutex = PTHREAD_MUTEX_INITIALIZER;
-unsigned int step_size = 10;
+unsigned int step_size = 1;
 std::vector<unsigned int> thread_iterations;
 pthread_mutex_t iterations_mutex = PTHREAD_MUTEX_INITIALIZER;
 
