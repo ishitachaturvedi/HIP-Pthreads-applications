@@ -89,7 +89,6 @@ void* bitonic_sort_task(void* arg) {
     pthread_mutex_unlock(&iterations_mutex);
 
     delete task; // Free allocated memory for the task
-    pthread_exit(nullptr);
 }
 
 int main(int argc, char* argv[]) {
