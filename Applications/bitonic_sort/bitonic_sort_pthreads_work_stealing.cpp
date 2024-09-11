@@ -48,7 +48,7 @@ void* bitonic_sort_task(void* arg) {
         // Lock to get the next chunk of work
         pthread_mutex_lock(&index_mutex);
         start = shared_index;
-        shared_index += step_size; // Each thread will process chunks of 10 pairs
+        shared_index += step_size; // Each thread will process chunks of step_size pairs
         pthread_mutex_unlock(&index_mutex);
 
         if (start >= length / 2) {
@@ -56,11 +56,6 @@ void* bitonic_sort_task(void* arg) {
         }
 
         unsigned int end = std::min(start + step_size, length / 2);
-
-        // Debug output with thread-safe mechanism (optional)
-        // pthread_mutex_lock(&output_mutex);
-        // std::cout << "Thread " << thread_id << " (pthread ID: " << pthread_self() << ") working on pairs from " << start << " to " << end << std::endl;
-        // pthread_mutex_unlock(&output_mutex);
 
         // Process step_size pairs
         for (unsigned int id = start; id < end; ++id) {
@@ -88,11 +83,10 @@ void* bitonic_sort_task(void* arg) {
         }
     }
 
-#ifdef DEBUG_CHECK
+    // Update iteration count for the thread
     pthread_mutex_lock(&iterations_mutex);
-    thread_iterations[thread_id] = local_iterations;
+    thread_iterations[thread_id] += local_iterations;
     pthread_mutex_unlock(&iterations_mutex);
-#endif
 
     delete task; // Free allocated memory for the task
     pthread_exit(nullptr);
@@ -132,7 +126,7 @@ int main(int argc, char* argv[]) {
 
     // Dynamically allocate resources based on number of threads
     pthread_t* threads = new pthread_t[num_threads];
-    thread_iterations.resize(num_threads, 0);
+    thread_iterations.resize(num_threads, 0);  // Initialize thread iteration counts to 0
 
     // Create tasks and assign them to threads for bitonic sort
     for (unsigned int i = 0; i < steps; ++i) {

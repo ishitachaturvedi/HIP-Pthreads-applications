@@ -132,9 +132,9 @@ void bitonic_sort_reference(unsigned int*      array,
 
 int main(int argc, char* argv[])
 {
-    if(argc < 3)
+    if(argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <log2length> <sort_order (inc/dec)>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <log2length>" << std::endl;
         return 1; // Error exit code
     }
 
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     unsigned int steps = std::stoi(argv[1]);
 
     // Parse the second argument as the sort order (inc/dec)
-    std::string sort = argv[2];
+    std::string sort = "inc";
 
     // Validate the sort order
     if(sort != "inc" && sort != "dec")
