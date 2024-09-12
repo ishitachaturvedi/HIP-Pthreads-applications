@@ -12,7 +12,7 @@
 
 //#define DEBUG_CHECK
 
-const unsigned int rows_per_batch = 10;  // Number of rows each thread processes at a time
+const unsigned int rows_per_batch = 5;  // Number of rows each thread processes at a time
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 unsigned int current_row = 0;  // Shared variable to track the current row being processed
 
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
     // Generate random input
     std::mt19937 mersenne_engine{0};
     std::uniform_real_distribution<float> distribution{0, 256};
-    auto rnd = std::bind(distribution, mersenne_engine);
+    auto rnd = std::bind(distribution, mersenne_engine);  // Use std::bind for random number generation
     std::generate(input_grid.begin(), input_grid.end(), rnd);
 
     // Copy input grid to padded input grid
@@ -187,7 +187,8 @@ int main(int argc, char* argv[]) {
         total_rows = total_rows + thread_data[i].rows_processed;
         std::cout << "Thread " << i << " processed " << thread_data[i].rows_processed << " rows." << std::endl;
     }
-    std::cout<<"Total rows processed "<< total_rows <<"\n";
+    std::cout << "Total rows processed: " << total_rows << std::endl;
 #endif
+
     return 0;
 }
