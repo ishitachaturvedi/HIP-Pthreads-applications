@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <cstdlib>
 #include <climits>
+#include <numeric>
 
 const unsigned int rows_per_task = 10;
 
@@ -104,11 +105,24 @@ int main(int argc, char* argv[]) {
     std::vector<unsigned int> adjacency_matrix(size);
     std::vector<unsigned int> next_matrix(size);
 
-    for (unsigned int x = 0; x < nodes; x++) {
-        for (unsigned int y = 0; y < nodes; y++) {
-            adjacency_matrix[x * nodes + y] = (x == y) ? 0 : rand() % 100 + 1;
-            next_matrix[x * nodes + y] = y;
+    // Set the seed for rand()
+    unsigned int seed = 42;  // Replace with your desired seed value
+    srand(seed);
+
+    std::iota(adjacency_matrix.begin(), adjacency_matrix.end(), 1);
+    for(unsigned int x = 0; x < nodes; x++)
+    {
+        adjacency_matrix[x * nodes + x] = 0;
+    }
+
+    for(unsigned int x = 0; x < nodes; x++)
+    {
+        for(unsigned int y = 0; y < x; y++)
+        {
+            next_matrix[x * nodes + y] = x;
+            next_matrix[y * nodes + x] = y;
         }
+        next_matrix[x * nodes + x] = x;
     }
 
     std::vector<unsigned int> expected_adjacency_matrix(adjacency_matrix);
