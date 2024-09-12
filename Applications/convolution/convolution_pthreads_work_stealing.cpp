@@ -10,9 +10,9 @@
 #include <iterator>
 #include <cstdlib>  // for std::atoi
 
-#define DEBUG_CHECK
+//#define DEBUG_CHECK
 
-const unsigned int rows_per_batch = 5;  // Number of rows each thread processes at a time
+const unsigned int rows_per_batch = 1;  // Number of rows each thread processes at a time
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 unsigned int current_row = 0;  // Shared variable to track the current row being processed
 
