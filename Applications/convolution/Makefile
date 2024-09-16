@@ -21,7 +21,8 @@
 # SOFTWARE.
 
 EXAMPLE_HIP := convolution_HIP
-EXAMPLE_pthreads := convolution_pthreads
+EXAMPLE_pthreads_coarse := convolution_pthreads_coarse_grained
+EXAMPLE_pthreads_fine := convolution_pthreads_fine_grained
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -55,8 +56,11 @@ ILDLIBS   += $(LDLIBS)
 $(EXAMPLE_HIP): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
 	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
 
-$(EXAMPLE_pthreads):
-	g++ convolution_pthreads_work_stealing.cpp -o bin/convolution_pthreads -lpthread -static
+$(EXAMPLE_pthreads_coarse):
+	g++ convolution_pthreads_work_stealing_coarse_grained.cpp -o bin/convolution_pthreads_coarse_grained -lpthread -static
+
+$(EXAMPLE_pthreads_fine):
+	g++ convolution_pthreads_work_stealing_fine_grained.cpp -o bin/convolution_pthreads_fine_grained -lpthread -static
 
 clean:
 	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads)
