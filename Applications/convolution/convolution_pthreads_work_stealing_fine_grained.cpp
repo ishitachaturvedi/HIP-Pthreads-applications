@@ -43,8 +43,9 @@ void* convolution_thread(void* arg) {
     // Process each row
     for (unsigned int y = 0; y < height; ++y) {
         bool has_work = true;
+        unsigned int start_column = 0;
+        current_column = 0;
         while (has_work) {
-            unsigned int start_column;
 
             // Work stealing: Lock mutex to safely update the shared column counter
             pthread_mutex_lock(&mutex);
@@ -134,13 +135,11 @@ int main(int argc, char* argv[]) {
     std::vector<float> input_grid_padded(input_size_padded, 0);
 
     // Define a 5x5 convolution mask (convolution_filter_5x5)
-    std::vector<float> convolution_filter_5x5 = {
-        1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1
-    };
+    std::vector<float> convolution_filter_5x5 = {1.0f,  3.0f, 0.0f,  -2.0f, -0.0f,
+                                                                   1.0f,  4.0f, 0.0f,  -8.0f, -4.0f,
+                                                                   2.0f,  7.0f, 0.0f, -12.0f, -0.0f,
+                                                                   2.0f,  3.0f, 1.5f,  -8.0f, -4.0f,
+                                                                   0.0f,  1.0f, 0.0f,  -2.0f, -0.0f};
 
     // Generate random input
     std::mt19937 mersenne_engine{0};
