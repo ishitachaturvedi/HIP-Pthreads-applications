@@ -6,9 +6,8 @@
 #include <algorithm>
 #include <functional>
 #include <cstdlib>  // for std::atoi
-#include <atomic>    // for std::atomic
 
-//#define DEBUG_CHECK
+#define DEBUG_CHECK
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_barrier_t barrier;  // Global barrier
@@ -25,7 +24,6 @@ struct ThreadData {
     unsigned int mask_width;
     unsigned int height;
     unsigned int thread_id;
-    std::atomic<unsigned int> columns_processed;  // Atomic counter for columns processed
 };
 
 // Function for performing convolution with work-stealing on the columns
@@ -42,43 +40,30 @@ void* convolution_thread(void* arg) {
 
     // Process each row
     for (unsigned int y = 0; y < height; ++y) {
-        bool has_work = true;
-        while (has_work) {
-            unsigned int start_column;
-
+        unsigned int start_column = 0;
+        current_column = 0;
+        while (true) {
             // Work stealing: Lock mutex to safely update the shared column counter
             pthread_mutex_lock(&mutex);
             start_column = current_column;
-            if (start_column < width) {
-                current_column += columns_per_batch;
-                has_work = true;
-            } else {
-                has_work = false;
-            }
+            current_column += columns_per_batch;
             pthread_mutex_unlock(&mutex);
 
-            if (has_work) {
-                // Perform convolution on the current column for the given row
-                float sum = 0.0f;  // Local sum for each thread
-                for (unsigned int mask_index_y = 0; mask_index_y < mask_width; ++mask_index_y) {
-                    for (unsigned int mask_index_x = 0; mask_index_x < mask_width; ++mask_index_x) {
-                        unsigned int mask_index = mask_index_y * mask_width + mask_index_x;
-                        unsigned int input_index = (y + mask_index_y) * padded_width + (start_column + mask_index_x);
-                        sum += input[input_index] * mask[mask_index];
-                    }
+            if (start_column >= width) {
+                break;  // No more columns to process in this row
+            }
+
+            // Perform convolution on the current column for the given row
+            float sum = 0.0f;  // Local sum for each thread
+            for (unsigned int mask_index_y = 0; mask_index_y < mask_width; ++mask_index_y) {
+                for (unsigned int mask_index_x = 0; mask_index_x < mask_width; ++mask_index_x) {
+                    unsigned int mask_index = mask_index_y * mask_width + mask_index_x;
+                    unsigned int input_index = (y + mask_index_y) * padded_width + (start_column + mask_index_x);
+                    sum += input[input_index] * mask[mask_index];
                 }
-                output[y * width + start_column] = sum;
-
-                // Increment the column counter for this thread
-                data->columns_processed++;
             }
-
-            // Synchronize threads if no more work is available
-            if (!has_work) {
-                pthread_barrier_wait(&barrier);
-            }
+            output[y * width + start_column] = sum;
         }
-
         // Wait for all threads to synchronize before starting the next row
         pthread_barrier_wait(&barrier);
     }
@@ -172,7 +157,6 @@ int main(int argc, char* argv[]) {
         thread_data[i].mask_width = mask_width;
         thread_data[i].height = height;
         thread_data[i].thread_id = i;
-        thread_data[i].columns_processed = 0;  // Initialize column counter
         pthread_create(&threads[i], nullptr, convolution_thread, &thread_data[i]);
     }
 
@@ -198,11 +182,6 @@ int main(int argc, char* argv[]) {
         std::cout << "The outputs are different. There may be an issue with the multithreaded version." << std::endl;
     }
 #endif
-
-    // Print number of columns processed by each thread
-    for (unsigned int i = 0; i < num_threads; ++i) {
-        std::cout << "Thread " << i << " processed " << thread_data[i].columns_processed.load() << " columns." << std::endl;
-    }
 
     return 0;
 }
