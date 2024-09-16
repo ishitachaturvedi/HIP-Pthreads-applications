@@ -21,7 +21,8 @@
 # SOFTWARE.
 
 EXAMPLE := floyd_warshall_HIP
-EXAMPLE_CPU := floyd_warshall_pthreads
+EXAMPLE_CPU_coarse_grain := floyd_warshall_pthreads_coarse_grain
+EXAMPLE_CPU_fine_grain := floyd_warshall_pthreads_fine_grain
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -55,8 +56,11 @@ ILDLIBS   += $(LDLIBS)
 $(EXAMPLE): main_unified_memory.hip $(COMMON_INCLUDE_DIR)/example_utils.hpp $(COMMON_INCLUDE_DIR)/cmdparser.hpp
 	$(HIPCXX) $(ICXXFLAGS) $(ICPPFLAGS) $(ILDFLAGS) -o bin/$@ $< $(ILDLIBS)
 
-$(EXAMPLE_CPU):
-	g++ floyd_warshall_pthreads_work_stealing.cpp -o bin/floyd_warshall_pthreads -lpthread -static
+$(EXAMPLE_CPU_coarse_grain):
+	g++ floyd_warshall_pthreads_work_stealing_coarse_grain.cpp -o bin/floyd_warshall_pthreads_coarse_grain -lpthread -static
+
+$(EXAMPLE_CPU_fine_grain):
+	g++ floyd_warshall_pthreads_work_stealing_fine_grain.cpp -o bin/floyd_warshall_pthreads_fine_grain -lpthread -static
 
 clean:
 	$(RM) $(EXAMPLE) $(EXAMPLE_CPU)
