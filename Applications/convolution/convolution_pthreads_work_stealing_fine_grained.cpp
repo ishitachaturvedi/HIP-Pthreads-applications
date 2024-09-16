@@ -13,7 +13,7 @@
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_barrier_t barrier;  // Global barrier
 unsigned int current_column = 0;  // Shared variable for column work-stealing
-const unsigned int columns_per_batch = 1;  // Number of columns each thread processes at a time
+const unsigned int columns_per_batch = 10;  // Number of columns each thread processes at a time
 
 // Thread data structure
 struct ThreadData {
@@ -44,14 +44,15 @@ void* convolution_thread(void* arg) {
     for (unsigned int y = 0; y < height; ++y) {
         bool has_work = true;
         unsigned int start_column = 0;
+        unsigned int end_column = 0;
         current_column = 0;
         while (has_work) {
-
             // Work stealing: Lock mutex to safely update the shared column counter
             pthread_mutex_lock(&mutex);
             start_column = current_column;
+            current_column += columns_per_batch;
             if (start_column < width) {
-                current_column += columns_per_batch;
+                end_column = std::min(start_column + columns_per_batch, width);
                 has_work = true;
             } else {
                 has_work = false;
@@ -59,19 +60,22 @@ void* convolution_thread(void* arg) {
             pthread_mutex_unlock(&mutex);
 
             if (has_work) {
-                // Perform convolution on the current column for the given row
-                float sum = 0.0f;  // Local sum for each thread
-                for (unsigned int mask_index_y = 0; mask_index_y < mask_width; ++mask_index_y) {
-                    for (unsigned int mask_index_x = 0; mask_index_x < mask_width; ++mask_index_x) {
-                        unsigned int mask_index = mask_index_y * mask_width + mask_index_x;
-                        unsigned int input_index = (y + mask_index_y) * padded_width + (start_column + mask_index_x);
-                        sum += input[input_index] * mask[mask_index];
+                for(unsigned int x = start_column; x < end_column; x++) {
+                    // Perform convolution on the current column for the given row
+                    float sum = 0.0f;  // Local sum for each thread
+                    for (unsigned int mask_index_y = 0; mask_index_y < mask_width; ++mask_index_y) {
+                        for (unsigned int mask_index_x = 0; mask_index_x < mask_width; ++mask_index_x) {
+                            unsigned int mask_index = mask_index_y * mask_width + mask_index_x;
+                            unsigned int input_index = (y + mask_index_y) * padded_width + (x + mask_index_x);
+                            sum += input[input_index] * mask[mask_index];
+                        }
                     }
+                    output[(y * width + x)] = sum;
                 }
-                output[y * width + start_column] = sum;
-
+#ifdef DEBUG_CHECK
                 // Increment the column counter for this thread
                 data->columns_processed++;
+#endif
             }
 
             // Synchronize threads if no more work is available
