@@ -1,0 +1,172 @@
+#include <iostream>
+#include <vector>
+#include <pthread.h>
+#include <cstdlib>
+#include <climits>
+#include <numeric>
+
+const unsigned int columns_per_task = 10;
+
+//#define DEBUG_CHECK
+
+// Struct to hold thread data
+struct ThreadData {
+    unsigned int* adjacency_matrix;
+    unsigned int* next_matrix;
+    unsigned int nodes;
+    unsigned int k;
+    unsigned int* current_column;
+    pthread_mutex_t* column_mutex;
+};
+
+// Floyd-Warshall kernel function for each thread
+void* floyd_warshall_thread(void* arg) {
+    ThreadData* data = (ThreadData*)arg;
+    unsigned int* adjacency_matrix = data->adjacency_matrix;
+    unsigned int* next_matrix = data->next_matrix;
+    unsigned int nodes = data->nodes;
+    unsigned int k = data->k;
+    unsigned int* current_column = data->current_column;
+    pthread_mutex_t* column_mutex = data->column_mutex;
+
+    // Outer loop: go through each row (x)
+    for (unsigned int x = 0; x < nodes; ++x) {
+        const unsigned int row_x = x * nodes;
+
+        while (true) {
+            unsigned int start_column = 0;
+
+            // Work stealing: Lock the mutex to safely update the shared column counter
+            pthread_mutex_lock(column_mutex);
+            if (*current_column >= nodes) {
+                pthread_mutex_unlock(column_mutex);
+                break;  // No more columns to process for this row
+            }
+            start_column = *current_column;
+            *current_column += columns_per_task;
+            pthread_mutex_unlock(column_mutex);
+
+            unsigned int end_column = std::min(start_column + columns_per_task, nodes);
+
+            // Inner loop: process assigned columns (y)
+            for (unsigned int y = start_column; y < end_column; ++y) {
+                const unsigned int d_x_y = adjacency_matrix[row_x + y];
+                const unsigned int d_x_k = adjacency_matrix[row_x + k];
+                const unsigned int d_k_y = adjacency_matrix[k * nodes + y];
+                const unsigned int d_x_k_y = d_x_k + d_k_y;
+
+                if (d_x_k_y < d_x_y) {
+                    adjacency_matrix[row_x + y] = d_x_k_y;
+                    next_matrix[row_x + y] = k;
+                }
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+
+// Reference CPU implementation for validation
+void floyd_warshall_reference(unsigned int* adjacency_matrix,
+                              unsigned int* next_matrix,
+                              const unsigned int nodes) {
+    for (unsigned int k = 0; k < nodes; k++) {
+        for (unsigned int x = 0; x < nodes; x++) {
+            const unsigned int row_x = x * nodes;
+            for (unsigned int y = 0; y < nodes; y++) {
+                const unsigned int d_x_y = adjacency_matrix[row_x + y];
+                const unsigned int d_x_k = adjacency_matrix[row_x + k];
+                const unsigned int d_k_y = adjacency_matrix[k * nodes + y];
+                const unsigned int d_x_k_y = d_x_k + d_k_y;
+
+                if (d_x_k_y < d_x_y) {
+                    adjacency_matrix[row_x + y] = d_x_k_y;
+                    next_matrix[row_x + y] = k;
+                }
+            }
+        }
+    }
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 4) {
+        std::cout << "Usage: " << argv[0] << " <nodes> <iterations> <num_threads>" << std::endl;
+        return -1;
+    }
+
+    const unsigned int nodes = std::stoi(argv[1]);
+    const unsigned int iterations = std::stoi(argv[2]);
+    const unsigned int num_threads = std::stoi(argv[3]);
+
+    if (num_threads == 0) {
+        std::cout << "Number of threads must be greater than 0." << std::endl;
+        return -1;
+    }
+
+    const unsigned int size = nodes * nodes;
+
+    std::vector<unsigned int> adjacency_matrix(size);
+    std::vector<unsigned int> next_matrix(size);
+
+    // Set the seed for rand()
+    unsigned int seed = 42;  // Replace with your desired seed value
+    srand(seed);
+
+    std::iota(adjacency_matrix.begin(), adjacency_matrix.end(), 1);
+    for(unsigned int x = 0; x < nodes; x++)
+    {
+        adjacency_matrix[x * nodes + x] = 0;
+    }
+
+    for(unsigned int x = 0; x < nodes; x++)
+    {
+        for(unsigned int y = 0; y < x; y++)
+        {
+            next_matrix[x * nodes + y] = x;
+            next_matrix[y * nodes + x] = y;
+        }
+        next_matrix[x * nodes + x] = x;
+    }
+
+    std::vector<unsigned int> expected_adjacency_matrix(adjacency_matrix);
+    std::vector<unsigned int> expected_next_matrix(next_matrix);
+
+    pthread_t threads[num_threads];
+    ThreadData thread_data[num_threads];
+    pthread_mutex_t row_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    for (unsigned int i = 0; i < iterations; ++i) {
+        for (unsigned int k = 0; k < nodes; ++k) {
+            unsigned int current_column = 0;
+
+            for (unsigned int t = 0; t < num_threads; ++t) {
+                thread_data[t] = {adjacency_matrix.data(), next_matrix.data(), nodes, k, &current_column, &row_mutex};
+                pthread_create(&threads[t], nullptr, floyd_warshall_thread, &thread_data[t]);
+            }
+
+            for (unsigned int t = 0; t < num_threads; ++t) {
+                pthread_join(threads[t], nullptr);
+            }
+        }
+    }
+
+#ifdef DEBUG_CHECK
+
+    floyd_warshall_reference(expected_adjacency_matrix.data(), expected_next_matrix.data(), nodes);
+
+    unsigned int errors = 0;
+    for (unsigned int i = 0; i < size; ++i) {
+        errors += (adjacency_matrix[i] != expected_adjacency_matrix[i]);
+    }
+
+    if (errors) {
+        std::cout << "Validation failed with " << errors << " errors." << std::endl;
+        return -1;
+    } else {
+        std::cout << "Validation passed." << std::endl;
+    }
+
+#endif
+    return 0;
+}
