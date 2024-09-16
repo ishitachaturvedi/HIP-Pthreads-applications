@@ -7,7 +7,7 @@
 #include <functional>
 #include <cstdlib>  // for std::atoi
 
-#define DEBUG_CHECK
+//#define DEBUG_CHECK
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_barrier_t barrier;  // Global barrier
