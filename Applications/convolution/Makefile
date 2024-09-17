@@ -23,6 +23,7 @@
 EXAMPLE_HIP := convolution_HIP
 EXAMPLE_pthreads_coarse := convolution_pthreads_coarse_grained
 EXAMPLE_pthreads_fine := convolution_pthreads_fine_grained
+EXAMPLE_pthreads_fine_extra := convolution_pthreads_fine_grained_extra
 COMMON_INCLUDE_DIR := ../../Common
 GPU_RUNTIME := HIP
 
@@ -61,6 +62,9 @@ $(EXAMPLE_pthreads_coarse):
 
 $(EXAMPLE_pthreads_fine):
 	g++ convolution_pthreads_work_stealing_fine_grained.cpp -o bin/convolution_pthreads_fine_grained -lpthread -static
+
+$(EXAMPLE_pthreads_fine_extra):
+	g++ convolution_pthreads_work_stealing_fine_grained_extra_code.cpp -o bin/convolution_pthreads_fine_grained_extra -lpthread -static
 
 clean:
 	$(RM) $(EXAMPLE_HIP) $(EXAMPLE_pthreads)
